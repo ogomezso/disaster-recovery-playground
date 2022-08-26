@@ -1,0 +1,129 @@
+version: '3.7'
+
+services:
+  
+  kafka-proxy:
+    image: grepplabs/kafka-proxy:v0.3.1-all
+    ports: 
+      - "30001-30003:30001-30003"
+    command: server --bootstrap-server-mapping=dc1_broker1:19092,0.0.0.0:30001,localhost:30001 --bootstrap-server-mapping=dc1_broker2:19092,0.0.0.0:30002,localhost:30002 --bootstrap-server-mapping=dc1_broker3:19092,0.0.0.0:30003,localhost:30003
+    depends_on:
+      - dc1_broker
+  
+  dc1_zookeeper:
+    image: confluentinc/cp-zookeeper:7.2.0 
+    ports:
+      - "12181:2181"
+      - "1999:1999"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 12181
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_JMX_PORT: 1999  
+      KAFKA_JMX_HOSTNAME: dc1_zookeeper
+
+  dc1_broker1:
+    image: confluentinc/cp-server:7.2.0 
+    depends_on:
+      - dc1_zookeeper
+    ports:
+      - "19101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: dc1_zookeeper:12181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://dc1_broker1:19092
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: dc1_broker1
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://dc1_schema-registry:8081
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: dc1_broker1:19092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 3
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
+  dc1_broker2:
+    image: confluentinc/cp-server:7.2.0 
+    depends_on:
+      - dc1_zookeeper
+    ports:
+      - "19102:9101"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: dc1_zookeeper:12181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://dc1_broker2:19092
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: dc1_broker2
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://dc1_schema-registry:8081
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: dc1_broker2:19092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 3
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
+  dc1_broker3:
+    image: confluentinc/cp-server:7.2.0 
+    depends_on:
+      - dc1_zookeeper
+    ports:
+      - "19103:9101"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: dc1_zookeeper:12181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://dc1_broker3:19092
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: dc1_broker3
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://dc1_schema-registry:8081
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: dc1_broker3:19092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 3
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
+  dc1_schema-registry:
+    image: confluentinc/cp-schema-registry:7.2.0 
+    depends_on:
+      - dc1_broker1
+      - dc1_broker2
+      - dc1_broker3
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: dc1_schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: dc1_broker1:19092,dc1_broker2:19092,dc1_broker3:19092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+  dc1_control-center:
+    image: confluentinc/cp-enterprise-control-center:7.2.0 
+    depends_on:
+      - dc1_broker1
+      - dc1_schema-registry
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: dc1_broker1:19092
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: http://dc1_schema-registry:8081
+      CONTROL_CENTER_REPLICATION_FACTOR: 3
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 3
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 3
+      CONFLUENT_METRICS_TOPIC_REPLICATION: 3
+      PORT: 9021
