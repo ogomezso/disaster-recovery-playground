@@ -1,0 +1,117 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: clients
+  name: namespace-reader
+rules:
+  - apiGroups: ["", "extensions", "apps"]
+    resources: ["configmaps", "pods", "services", "endpoints", "secrets"]
+    verbs: ["get", "list", "watch"]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: namespace-reader-binding
+  namespace: clients
+subjects:
+  - kind: ServiceAccount
+    name: default
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: namespace-reader
+  apiGroup: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  annotations:
+    configmap.reloader.stakater.com/reload: "java-cloud-producer-config,kafka-proxy-config"
+  labels:
+    app: java-cloud-producer
+  name: java-cloud-producer
+  namespace: clients
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: java-cloud-producer
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: java-cloud-producer
+    spec:
+      containers:
+      - name: java-cloud-producer
+        image: ogomezso/java-cloud-producer:0.0.1
+        resources: {}
+        volumeMounts:
+        - name: app-config-volume
+          mountPath: /config
+      - name: kafka-proxy
+        image: grepplabs/kafka-proxy:latest
+        args:
+          - server
+          - --log-format=json
+          - --bootstrap-server-mapping=$(BOOTSTRAP_SERVERS),127.0.0.1:32400
+          - '--tls-enable'
+          - '--tls-insecure-skip-verify'
+          - '--sasl-enable'
+          - '--sasl-jaas-config-file=/config/jaas.config'
+        env:
+        - name: BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: kafka-proxy-config
+              key: bootstrap_servers
+        volumeMounts:
+        - name: kafka-proxy-config-volume
+          mountPath: "/config"
+        ports:
+        - name: metrics
+          containerPort: 9080
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 2
+          failureThreshold: 5
+      volumes:
+        - name: app-config-volume
+          configMap:
+            name: java-cloud-producer-config
+        - name: kafka-proxy-config-volume
+          configMap:
+            name: kafka-proxy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: java-cloud-producer
+  name: java-cloud-producer
+  namespace: clients
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: java-cloud-producer
+status:
+  loadBalancer: {}

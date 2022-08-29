@@ -1,0 +1,3 @@
+.vscode/**
+azure-credentials/**
+**/target/**

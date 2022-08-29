@@ -1,0 +1,19 @@
+{
+  "name": "ChuckFactMsg",
+  "type": "record",
+  "namespace": "org.github.ogomezso.springkafka.infrastructure.model.chuck",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "long"
+    },
+    {
+      "name": "fact",
+      "type": "string"
+    }
+  ]
+}
