@@ -14,14 +14,18 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
 
 1. 2 Confluent Cloud Clusters following the active-active DR pattern:
 
-![Active-Active Patter](./assets/active-active%20pattern.png)
+![Active-Active Patter](./assets/active-active%20pattern.svg)
+
 2. Kubernetes Cluster deployed (connectivity to CCloud cluster required)
+
 3. [Reloader](https://github.com/stakater/Reloader) pod deployed on your. For standard deployment you can execute: 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/stakater/Reloader/master/deployments/kubernetes/reloader.yaml
 ```
 4. Java Clients (producer/consumer) images on a available registry (you can use the ones provided under k8's resources folder)
+
 5. Clients will be deployed wit a [grepplabs/kafka-proxy](https://github.com/grepplabs/kafka-proxy) container as sidecar, that will act as a layer 7 kafka protocol aware proxy.
+
 6. ConfigMaps/Secrets need to be annotated to make `reloader` aware of the config changes:
 ```yaml
   annotations:
@@ -33,5 +37,7 @@ kubectl apply -f https://raw.githubusercontent.com/stakater/Reloader/master/depl
     configmap.reloader.stakater.com/reload: "java-cloud-producer-config,kafka-proxy-config"
 ```
 8. When disaster happens we will change the `kafka-proxy-config-map.yaml` with the values of DC2 Cluster
+
 9. `Reloader` will trigger a `rolling update` on any deployment annotated to listen changes of this CM.
+
 10. As failback procedure we just need to restore the connection data on `kafka proxy config map`to the DC 1 values and after a `rolling update` clients will be again connecting to the original cluster. 
