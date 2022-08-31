@@ -1,4 +1,4 @@
-# Distater Recovery Playgroung
+# Disaster Recovery Playgroung
 
 ## Project Goal
 
