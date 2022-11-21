@@ -1,6 +1,12 @@
 name: Point to North Cluster
 on:
   workflow_dispatch:
+
+env:
+  CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
+  CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
+  CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,10 +40,6 @@ jobs:
       with:
         manifests: |
           k8s-resources/proxy/kafka-proxy-configmap.yaml
-        env:
-          CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
-          CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
-          CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}
 #        images: |
 #          cloudlifeacr.azurecr.io/k8sflask:${{ github.sha }}
 #        imagepullsecrets: |
