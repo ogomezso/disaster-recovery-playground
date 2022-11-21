@@ -2,23 +2,29 @@ name: Point to North Cluster
 on:
   workflow_dispatch:
 
-env:
-  KAFKA_PROXY_CONFIGMAP: '${{ secrets.NORTH_CM }}'
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+      - uses: actions/checkout@master
 
-    # Set the target AKS cluster.
-    - uses: Azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: ogomezso-aks
-        resource-group: ogomezso
+      # Set the target AKS cluster.
+      - uses: Azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+          cluster-name: ogomezso-aks
+          resource-group: ogomezso
+      - uses: swdotcom/update-and-apply-kubernetes-configs@v1
+        with:
+          k8-config-file-paths: k8s-resources/proxy/kafka-proxy-configmap.yaml
+          replacement-method: defined
+        env:
+          CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
+          CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
+          CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}
 
-    - uses: Azure/k8s-deploy@v1
-      with:
-        namespace: 'clients'
-        manifests: '${{ env.KAFKA_PROXY_CONFIGMAP }}'
+#    - uses: Azure/k8s-deploy@v1
+#      with:
+#        namespace: 'clients'
+#        manifests: |
+#          k8s-resources/proxy/kafka-proxy-configmap.yaml
