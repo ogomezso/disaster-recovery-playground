@@ -1,3 +1,4 @@
 .vscode/**
 azure-credentials/**
 **/target/**
+K8s-resources/kafka-proxy-configmap-*
