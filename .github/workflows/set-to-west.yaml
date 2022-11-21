@@ -1,4 +1,4 @@
-name: Point to North Cluster
+name: Point to West Cluster
 on:
   workflow_dispatch:
 
