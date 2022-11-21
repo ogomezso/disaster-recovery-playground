@@ -2,4 +2,7 @@
 azure-credentials/**
 **/target/**
 .idea/**
-/ccloud-resources/cluster-linking/
+.env
+/ccloud-resources/cluster-linking/west-north.properties
+.env
+north-west.properties
