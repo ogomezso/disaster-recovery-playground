@@ -12,7 +12,6 @@ jobs:
 #        login-server: cloudlifeacr.azurecr.io
 #        username: ${{ secrets.ACR_USERNAME }}
 #        password: ${{ secrets.ACR_PASSWORD }}
-#
 #    - run: |
 #        docker build . -t cloudlifeacr.azurecr.io/k8sflask:${{ github.sha }}
 #        docker push cloudlifeacr.azurecr.io/k8sflask:${{ github.sha }}
