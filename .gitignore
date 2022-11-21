@@ -1,4 +1,5 @@
 .vscode/**
 azure-credentials/**
 **/target/**
-K8s-resources/kafka-proxy-configmap-*
+.idea/**
+/ccloud-resources/cluster-linking/

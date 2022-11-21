@@ -9,7 +9,7 @@ data:
   jaas.config: |-
    KafkaServer {
      org.apache.kafka.common.security.plain.PlainLoginModule required
-     username="<API-KEY>"
-     password="<API_PASSWORD>"
+     username=${CCLOUD_APIKEY}
+     password=${CCLOUD_PASSWD}
     };
-  bootstrap_servers: <BOOTSTRAP_SERVERS>
+  bootstrap_servers: ${CCLOUD_URL}
