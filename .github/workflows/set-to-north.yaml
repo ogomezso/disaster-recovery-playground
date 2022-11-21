@@ -3,9 +3,7 @@ on:
   workflow_dispatch:
 
 env:
-  CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
-  CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
-  CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}
+  KAFKA_PROXY_CONFIGMAP: '${{ secrets.NORTH_CM }}'
 
 jobs:
   build:
@@ -23,5 +21,4 @@ jobs:
     - uses: Azure/k8s-deploy@v1
       with:
         namespace: 'clients'
-        manifests: |
-          k8s-resources/proxy/kafka-proxy-configmap.yaml
+        manifests: '${{ env.KAFKA_PROXY_CONFIGMAP }}'
