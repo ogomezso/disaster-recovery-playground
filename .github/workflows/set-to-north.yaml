@@ -1,0 +1,43 @@
+name: Point to North Cluster
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+#    - uses: Azure/docker-login@v1
+#      with:
+#        login-server: cloudlifeacr.azurecr.io
+#        username: ${{ secrets.ACR_USERNAME }}
+#        password: ${{ secrets.ACR_PASSWORD }}
+#
+#    - run: |
+#        docker build . -t cloudlifeacr.azurecr.io/k8sflask:${{ github.sha }}
+#        docker push cloudlifeacr.azurecr.io/k8sflask:${{ github.sha }}
+
+    # Set the target AKS cluster.
+    - uses: Azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ogomezso-aks
+        resource-group: ogomezso
+
+#    - uses: Azure/k8s-create-secret@v1
+#      with:
+#        container-registry-url: cloudlifeacr.azurecr.io
+#        container-registry-username: ${{ secrets.ACR_USERNAME }}
+#        container-registry-password: ${{ secrets.ACR_PASSWORD }}
+#        secret-name: k8s-secret
+
+    - uses: Azure/k8s-deploy@v1
+      with:
+        manifests: |
+          k8s-resources/proxy/kafka-proxy-configmap.yaml
+        env:
+          CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
+          CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
+          CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}
+#        images: |
+#          cloudlifeacr.azurecr.io/k8sflask:${{ github.sha }}
+#        imagepullsecrets: |
+#          k8s-secret

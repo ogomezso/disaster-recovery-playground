@@ -5,7 +5,7 @@ metadata:
   name: java-cloud-producer-config
 data:
   config.properties: |-
-     bootstrap.servers=$CCLOUD-URL
+     bootstrap.servers=${CCLOUD-URL}
      ssl.endpoint.identification.algorithm=https
      security.protocol=SASL_SSL
      sasl.mechanism=PLAIN
