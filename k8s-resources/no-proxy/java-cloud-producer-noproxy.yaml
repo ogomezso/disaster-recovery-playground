@@ -1,7 +1,7 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: clients
+  namespace: noproxy-clients
   name: namespace-reader
 rules:
   - apiGroups: ["", "extensions", "apps"]
@@ -13,7 +13,7 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: namespace-reader-binding
-  namespace: clients
+  namespace: noproxy-clients
 subjects:
   - kind: ServiceAccount
     name: default
@@ -30,7 +30,7 @@ metadata:
   labels:
     app: java-cloud-producer
   name: java-cloud-producer
-  namespace: clients
+  namespace: noproxy-clients
 spec:
   replicas: 1
   selector:
@@ -65,7 +65,7 @@ metadata:
   labels:
     app: java-cloud-producer
   name: java-cloud-producer
-  namespace: clients
+  namespace: noproxy-clients
 spec:
   type: LoadBalancer
   ports:

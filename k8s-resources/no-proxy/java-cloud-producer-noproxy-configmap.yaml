@@ -1,15 +1,15 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  namespace: clients
+  namespace: noproxy-clients
   name: java-cloud-producer-config
 data:
   config.properties: |-
-     bootstrap.servers=$(BOOTSTRAP_SERVERS)
+     bootstrap.servers=$CCLOUD-URL
      ssl.endpoint.identification.algorithm=https
      security.protocol=SASL_SSL
      sasl.mechanism=PLAIN
-     sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=$(API_KEY) password=$(API_TOKEN);
+     sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=$CCLOUD-APIKEY password=$CCLOUD-PASSWD;
      client.id=chuck-java-producer
      key.serializer=org.apache.kafka.common.serialization.StringSerializer
      value.serializer=org.apache.kafka.common.serialization.StringSerializer
