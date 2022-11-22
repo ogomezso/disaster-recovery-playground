@@ -1,0 +1,24 @@
+name: Point producer to North Cluster
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      # Set the target AKS cluster.
+      - uses: Azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+          cluster-name: ogomezso-aks
+          resource-group: ogomezso
+      - uses: swdotcom/update-and-apply-kubernetes-configs@v1
+        with:
+          k8-config-file-paths: k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml
+          replacement-method: defined
+        env:
+          CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
+          CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
+          CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}

@@ -20,16 +20,10 @@ public class ChuckService implements ChuckAdapter {
   }
 
   @Override
-  public ChuckFact sendFact() throws JsonProcessingException {
+  public ChuckFact sendFact(String topic) throws JsonProcessingException {
     ChuckFact fact = chuckFactPort.buildFact();
     String message = objectMapper.writeValueAsString(fact);
-    producer.produceJsonMessage(message);
-    return fact;
-  }
-
-  @Override
-  public ChuckFact SendAvroFact() {
-    ChuckFact fact = chuckFactPort.buildFact();
+    producer.produceJsonMessage(topic,message);
     return fact;
   }
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-source .env
+source ../.env
 
 cat <<EOF >> west-north.properties
 cluster.link.prefix=west-

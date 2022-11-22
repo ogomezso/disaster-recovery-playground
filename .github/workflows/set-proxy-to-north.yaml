@@ -1,4 +1,4 @@
-name: Point to West Cluster
+name: Point kafka proxy to North Cluster
 on:
   workflow_dispatch:
 
@@ -20,5 +20,5 @@ jobs:
           replacement-method: defined
         env:
           CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
-          CCLOUD_APIKEY: ${{ secrets.CCLOUD_WEST_APIKEY }}
-          CCLOUD_PASSWD: ${{ secrets.CCLOUD_WEST_PASSWD }}
+          CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
+          CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}

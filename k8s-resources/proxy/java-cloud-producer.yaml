@@ -47,7 +47,7 @@ spec:
     spec:
       containers:
       - name: java-cloud-producer
-        image: ogomezso/java-cloud-producer:0.0.1
+        image: ogomezso/java-cloud-producer:0.0.2
         resources: {}
         volumeMounts:
         - name: app-config-volume
