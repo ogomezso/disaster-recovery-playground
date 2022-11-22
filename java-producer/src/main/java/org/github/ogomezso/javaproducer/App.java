@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class App {
 
-  public static void main(String[] args) throws FileNotFoundException, URISyntaxException {
+  public static void main(String[] args) {
 
     try (InputStream input = new FileInputStream(args[0])) {
       Properties config = new Properties();
