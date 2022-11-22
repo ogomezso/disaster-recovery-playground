@@ -10,4 +10,5 @@ data:
      bootstrap.servers=localhost:32400
      key.serializer=org.apache.kafka.common.serialization.StringSerializer
      value.serializer=org.apache.kafka.common.serialization.StringSerializer
+     client.id=chuck-java-producer
      topic=chuck-java-topic

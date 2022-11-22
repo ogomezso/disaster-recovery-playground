@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.example</groupId>
-  <artifactId>java-producer</artifactId>
+  <groupId>otlp.example</groupId>
+  <artifactId>java-consumer</artifactId>
   <version>1.0-SNAPSHOT</version>
   <repositories>
     <repository>
@@ -15,14 +15,9 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <kafka.version>3.3.1</kafka.version>
-    <finalName>java-producer</finalName>
+    <finalName>java-consumer</finalName>
   </properties>
   <dependencies>
-    <dependency>
-      <groupId>com.sparkjava</groupId>
-      <artifactId>spark-core</artifactId>
-      <version>2.9.4</version>
-    </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -49,22 +44,7 @@
       <groupId>org.apache.kafka</groupId>
       <version>${kafka.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>5.9.0</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>2.0.4</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
   <build>
     <plugins>
       <plugin>
@@ -76,7 +56,7 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>org.github.ogomezso.javaproducer.App</mainClass>
+              <mainClass>org.github.ogomezso.javaconsumer.App</mainClass>
               <classpathPrefix>dependency-jars/</classpathPrefix>
             </manifest>
           </archive>
@@ -106,7 +86,7 @@
               </descriptorRefs>
               <archive>
                 <manifest>
-                  <mainClass>org.github.ogomezso.javaproducer.App</mainClass>
+                  <mainClass>org.github.ogomezso.javaconsumer.App</mainClass>
                 </manifest>
               </archive>
             </configuration>

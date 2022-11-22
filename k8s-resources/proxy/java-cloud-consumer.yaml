@@ -28,26 +28,26 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   annotations:
-    configmap.reloader.stakater.com/reload: "java-cloud-producer-config,kafka-proxy-config"
+    configmap.reloader.stakater.com/reload: "java-cloud-consumer-config,kafka-proxy-config"
   labels:
-    app: java-cloud-producer
-  name: java-cloud-producer
+    app: java-cloud-consumer
+  name: java-cloud-consumer
   namespace: clients
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: java-cloud-producer
+      app: java-cloud-consumer
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: java-cloud-producer
+        app: java-cloud-consumer
     spec:
       containers:
-      - name: java-cloud-producer
-        image: ogomezso/java-cloud-producer:0.0.4
+      - name: java-cloud-consumer
+        image: ogomezso/java-cloud-consumer:0.0.1
         resources: {}
         volumeMounts:
         - name: app-config-volume
@@ -92,26 +92,7 @@ spec:
       volumes:
         - name: app-config-volume
           configMap:
-            name: java-cloud-producer-config
+            name: java-cloud-consumer-config
         - name: kafka-proxy-config-volume
           configMap:
             name: kafka-proxy-config
----
-apiVersion: v1
-kind: Service
-metadata:
-  creationTimestamp: null
-  labels:
-    app: java-cloud-producer
-  name: java-cloud-producer
-  namespace: clients
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 8080
-      protocol: TCP
-      targetPort: 8080
-  selector:
-    app: java-cloud-producer
-status:
-  loadBalancer: {}

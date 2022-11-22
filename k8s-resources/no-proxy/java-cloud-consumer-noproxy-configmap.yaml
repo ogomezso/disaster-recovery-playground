@@ -2,7 +2,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   namespace: noproxy-clients
-  name: java-cloud-producer-noproxy-config
+  name: java-cloud-consumer-noproxy-config
   annotations:
     reloader.stakater.com/match: "true"
 data:
@@ -12,7 +12,8 @@ data:
      security.protocol=SASL_SSL
      sasl.mechanism=PLAIN
      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${CCLOUD_APIKEY}' password=$'{CCLOUD_PASSWD}';
-     client.id=chuck-java-noproxy-producer
-     key.serializer=org.apache.kafka.common.serialization.StringSerializer
-     value.serializer=org.apache.kafka.common.serialization.StringSerializer
-     topic=chuck-java-np-topic
+     key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+     value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+     client.id=chuck-java-noproxy-consumer
+     group.id=chuck-java-noproxy-cg
+     topic=.*chuck-java-np-topic
