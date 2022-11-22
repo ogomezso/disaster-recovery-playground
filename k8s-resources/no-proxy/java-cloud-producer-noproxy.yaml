@@ -28,24 +28,26 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: java-cloud-producer
-  name: java-cloud-producer
+    app: java-cloud-producer-noproxy
+  name: java-cloud-producer-noproxy
   namespace: noproxy-clients
+  annotations:
+    configmap.reloader.stakater.com/reload: "java-cloud-producer-noproxy-config"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: java-cloud-producer
+      app: java-cloud-producer-noproxy
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: java-cloud-producer
+        app: java-cloud-producer-noproxy
     spec:
       containers:
-      - name: java-cloud-producer
-        image: ogomezso/java-cloud-producer:0.0.1
+      - name: java-cloud-producer-noproxy
+        image: ogomezso/java-cloud-producer:0.0.2
         resources: {}
         volumeMounts:
         - name: app-config-volume
@@ -53,18 +55,15 @@ spec:
       volumes:
         - name: app-config-volume
           configMap:
-            name: java-cloud-producer-config
-        - name: kafka-proxy-config-volume
-          configMap:
-            name: kafka-proxy-config
+            name: java-cloud-producer-noproxy-config
 ---
 apiVersion: v1
 kind: Service
 metadata:
   creationTimestamp: null
   labels:
-    app: java-cloud-producer
-  name: java-cloud-producer
+    app: java-cloud-producer-noproxy
+  name: java-cloud-producer-noproxy
   namespace: noproxy-clients
 spec:
   type: LoadBalancer
@@ -73,6 +72,6 @@ spec:
       protocol: TCP
       targetPort: 8080
   selector:
-    app: java-cloud-producer
+    app: java-cloud-producer-noproxy
 status:
   loadBalancer: {}

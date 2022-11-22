@@ -1,4 +1,4 @@
-name: Point to North Cluster
+name: Point producer to West Cluster
 on:
   workflow_dispatch:
 
@@ -16,9 +16,9 @@ jobs:
           resource-group: ogomezso
       - uses: swdotcom/update-and-apply-kubernetes-configs@v1
         with:
-          k8-config-file-paths: k8s-resources/proxy/kafka-proxy-configmap.yaml
+          k8-config-file-paths: k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml
           replacement-method: defined
         env:
           CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
-          CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
-          CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}
+          CCLOUD_APIKEY: ${{ secrets.CCLOUD_WEST_APIKEY }}
+          CCLOUD_PASSWD: ${{ secrets.CCLOUD_WEST_PASSWD }}

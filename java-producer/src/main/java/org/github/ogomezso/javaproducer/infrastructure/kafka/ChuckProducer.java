@@ -17,9 +17,9 @@ public class ChuckProducer {
     this.plainProducer = KafkaConfig.createKafkaProducer(appConfig);
   }
 
-  public void produceJsonMessage(String msg) {
+  public void produceJsonMessage(String topic, String msg) {
 
-    ProducerRecord<String, String> record = new ProducerRecord<>("chuck-java-topic", msg);
+    ProducerRecord<String, String> record = new ProducerRecord<>(topic, msg);
 
     plainProducer.send(record, (recordMetadata, exception) -> {
       if (exception == null) {
