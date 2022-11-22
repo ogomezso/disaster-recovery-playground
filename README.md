@@ -24,11 +24,35 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
    kubectl apply -f https://raw.githubusercontent.com/stakater/Reloader/master/deployments/kubernetes/reloader.yaml
    ```
 
-4. Create topic "chuck-java-topic" on both DC if auto.create.topics.enable is false
+4. Create topics you want to use on both DC if auto.create.topics.enable is false
 
-5. Java Clients (producer/consumer) images on a available registry (you can use the ones provided under k8's resources folder)
+   5. Cluster Linking: To setup the `active-active DR pattern` you will need:
 
-   * Clients will be deployed with a [grepplabs/kafka-proxy](https://github.com/grepplabs/kafka-proxy) container as sidecar, that will act as a layer 7 kafka protocol aware proxy.
+      1. Create a `.env` file under `ccloud-resources` folder it will contain:
+
+      ```properties
+      export ENV=  # CCLOUD Environment you're working on #
+      export TOPIC= # Default topic where clients will produce/consume #
+      export NP_TOPIC= # Topic where no proxy clients will produce/consume #
+      export CCLOUD_NORTH_CLUSTERID= # DC-1 Cluster Id #
+      export CCLOUD_NORTH_URL= # DC-1 Bootstrap server #
+      export CCLOUD_NORTH_APIKEY= # DC-1 App key #
+      export CCLOUD_NORTH_PASSWD= # DC-1 password #
+      export CCLOUD_WEST_CLUSTERID= # DC-2 Cluster Id #
+      export CCLOUD_WEST_URL= # DC-2 Bootstrap url #
+      export CCLOUD_WEST_APIKEY= # DC-2 Api Key #
+      export CCLOUD_WEST_PASSWD= # DC-2 Password #
+      ```
+      * The following scripts will use `.env` file to configure the resource creation
+      * All mirror topics will be prefixed with `<DC-Name>-`
+      2. Run  `ccloud-resources/cluster-linking/cluster-linking-north-west.sh` to create DC-1 to DC-2 `cluster link`
+      3. Run  `ccloud-resources/cluster-linking/create-mirror-topic-north-west.sh` to create the mirror topic on DC2 cluster for proxy based clients
+      4. Run `ccloud-resources/cluster-linking/create-mirror-noproxy-topic-north-west.sh` to create the mirror topic for on DC-2 cluster for non proxy based clients
+      5. Run `ccloud-resources/cluster-linking/cluster-linking-west-north.sh` to create DC-2 to DC-1 `cluster link`
+      6. Run `ccloud-resources/cluster-linking/create-mirror-topic-west-north.sh` to create mirror topic on DC1 for proxy based clients
+      7. Run `ccloud-resources/cluster-linking/create-mirror-noproxy-topic-west-north.sh` to create mirror topic on DC1 for non proxy based clients 
+
+6. Java Clients (producer/consumer) images on a available registry (you can use the ones provided under k8's resources folder)
 
    * ConfigMaps/Secrets need to be annotated to make `reloader` aware of the config changes:
 
@@ -43,45 +67,122 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
         annotations:
           configmap.reloader.stakater.com/reload: "java-cloud-producer-config,kafka-proxy-config"
       ```
+    1. **Java Client with Proxy**
+        * Resources are intended to be created on a `clients` namespace.
+        * Clients will be deployed with a [grepplabs/kafka-proxy](https://github.com/grepplabs/kafka-proxy) container as sidecar, that will act as a layer 7 kafka protocol aware proxy.
+       
+       1. Create 2 configmap using the file `k8s-resources/proxy/kafka-proxy-configmap.yaml` as a template. For each configmap, add the details of DC Cluster and API Key/Secret. This will be the config map the produce refers when it start:
 
-    1. Create 2 configmap using the file K8s-resources/kafka-proxy-configmap.yamlas a template. For each configmap, add the details of DC Cluster and API Key/Secret. This will be the config map the produce refers when it start:
+           ```bash
+           kubectl apply -f k8s-resources/proxy/kafka-proxy-configmap.yaml
+           ```
 
-       ```bash
-       kubectl apply -f K8s-resources/kafka-proxy-configmap.yaml
-       ```
+       2. Producer using a Proxy
+             1. Configure how the producer will call the proxy (as a sidecar):
 
-    2. Two cases: Producer using a Proxy or Producer without a Proxy
-       * Producer using a Proxy
-          1. Configure how the producer will call the proxy (as a sidecar):
+                ```bash
+                kubectl apply -f k8s-resources/proxy/java-cloud-producer-configmap.yaml
+                ```
 
-             ```bash
-             kubectl apply -f K8s-resources/java-cloud-producer-configmap.yaml
-             ```
+             2. Run the producer:
 
-          2. Run the producer:
+                ```bash
+                kubectl apply -f k8s-resources/proxy/java-cloud-producer.yaml
+                ```
 
-             ```bash
-             kubectl apply -f K8s-resources/java-cloud-producer.yaml
-             ```
+             3. Send Messages using the producer:
 
-          3. Send Messages using the producer:
+                Get the EXTERNAL-IP where the producer expose its API:
 
-             Get the EXTERNAL-IP where the producer expese its API:
+                ```bash
+                kubectl get svc -n clients
+                ```
 
-             ```bash
-             kubectl get svc -n clients
-             ```
+                and send the message using this command:
 
-             and send the message using this command:
+                ```bash
+                curl -X POST http://<EXTERNAL-IP>:8080/chuck-says
+                ```
 
-             ```bash
-             curl -X POST http://<EXTERNAL-IP>:8080/chuck-says
-             ```
+       3. When disaster happens we will change the `k8s-resources/proxy/kafka-proxy-configmap.yaml` with the values of DC2 Cluster
 
-       * Producer without a Proxy (TO BE DEFINED)
+       4. `Reloader` will trigger a `rolling update` on any deployment annotated to listen changes of this CM.
 
-6. When disaster happens we will change the `kafka-proxy-config-map.yaml` with the values of DC2 Cluster
+       5. As failback procedure we just need to restore the connection data on `k8s-resources/proxy/kafka-proxy-configmap.yaml` to the DC 1 values and after a `rolling update` clients will be again connecting to the original cluster.
+       
+    2. **Java Client without Proxy**
+        * Resources are intended to be created on a `nproxy-clients` namespace.
 
-7. `Reloader` will trigger a `rolling update` on any deployment annotated to listen changes of this CM.
+        1. Create a configmap using the file k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml as a template. For each configmap, add the details of DC Cluster and API Key/Secret. This will be the config map the produce refers when it start:
 
-8. As failback procedure we just need to restore the connection data on `kafka proxy config map`to the DC 1 values and after a `rolling update` clients will be again connecting to the original cluster.
+            ```bash
+            kubectl apply -f k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml
+            ```
+
+        2. Configure how the producer that will call CCloud Cluster directly:
+
+                   ```bash
+                   kubectl apply -f k8s-resources/no-proxy/java-cloud-producer-noproxy.yaml
+                   ```
+
+        3. Send Messages using the producer:
+
+                   Get the EXTERNAL-IP where the producer expese its API:
+
+                   ```bash
+                   kubectl get svc -n noproxy-clients
+                   ```
+
+                   and send the message using this command:
+
+                   ```bash
+                   curl -X POST http://<EXTERNAL-IP>:8080/chuck-says
+                   ```
+
+        4. When disaster happens we will change the `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml` with the values of DC2 Cluster
+
+        5. `Reloader` will trigger a `rolling update` on any deployment annotated to listen changes of this CM.
+
+        6. As failback procedure we just need to restore the connection data on `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml` to the DC 1 values and after a `rolling update` clients will be again connecting to the original cluster.
+
+## Failover/failback automation:
+
+The change of the proper configuration (kafka-proxy or client config) on the subsequent config map is fully automated based `git hub actions`  and `Azure AKS` you can find the actions definition under `.github/workflows` folder.
+
+### Setting up your Repository to run the action:
+
+First thing you will need is get yout `AZURE_CREDENTIALS` by running:
+
+```bash
+az ad sp create-for-rbac --name "chuck" --role contributor --scopes /subscriptions/<azure-subscription-id>/resourceGroups/<resource-group> --sdk-auth
+```
+
+and set the json response as repository secret on github.
+
+You also will need to setup secrets for the CCLOUD resources config.
+
+Find the secrets needed on the image bellow.
+
+![gh-secrets.png](assets/gh-secrets.png)
+
+### Running the action:
+
+Just go to the `Actions` tab on your repo choose the action and branch from you want to perform.
+
+![gh-actions-run.png](assets/gh-actions-run.png)
+
+## Performance Test
+
+A basic performance test suite is implemented using [Gatling](https://gatling.io).
+
+The test will run 1000 request for 10 concurrent users for proxy and no proxy producers
+
+To run it set up `perftest/src/test/resources/application.conf` file with the public endpoints for your proxy and no-proxy clients go to perftest folder and run:
+
+```bash
+mvn gatling:test
+```
+
+after that you can find the report folders with a `index.html` file under `perftest/target/gatling`
+
+![gatling-report.png](assets/gatling-report.png)

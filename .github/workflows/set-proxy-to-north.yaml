@@ -19,6 +19,6 @@ jobs:
           k8-config-file-paths: k8s-resources/proxy/kafka-proxy-configmap.yaml
           replacement-method: defined
         env:
-          CCLOUD_URL: pkc-7d81p.westeurope.azure.confluent.cloud:9092
+          CCLOUD_URL: ${{ secrets.CCLOUD_NORTH_URL }}
           CCLOUD_APIKEY: ${{ secrets.CCLOUD_NORTH_APIKEY }}
           CCLOUD_PASSWD: ${{ secrets.CCLOUD_NORTH_PASSWD }}
