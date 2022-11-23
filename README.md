@@ -52,7 +52,7 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
       6. Run `ccloud-resources/cluster-linking/create-mirror-topic-west-north.sh` to create mirror topic on DC1 for proxy based clients
       7. Run `ccloud-resources/cluster-linking/create-mirror-noproxy-topic-west-north.sh` to create mirror topic on DC1 for non proxy based clients 
 
-6. Java Clients (producer/consumer) images on a available registry (you can use the ones provided under k8's resources folder)
+6. Java Clients (producer/consumer) images on a available registry (you can use the resource definition provided under k8's resources folder)
 
    * ConfigMaps/Secrets need to be annotated to make `reloader` aware of the config changes:
 
@@ -103,6 +103,19 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
                 ```bash
                 curl -X POST http://<EXTERNAL-IP>:8080/chuck-says
                 ```
+       3. Consumer using Proxy
+          1. Apply consumer config:
+          
+            ````bash
+            kubectl apply -f k8s-resources/proxy/java-cloud-consumer-configmap.yaml
+            ````
+          2. Apply consumer resources:
+          
+            ```bash
+            kubectl apply -f k8s-resources/proxy/java-cloud-consumer.yaml
+            ```
+          
+            * The consumer will consume from a topic group based on pattern that covers the topology described on `active-active pattern`
 
        3. When disaster happens we will change the `k8s-resources/proxy/kafka-proxy-configmap.yaml` with the values of DC2 Cluster
 
@@ -113,38 +126,50 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
     2. **Java Client without Proxy**
         * Resources are intended to be created on a `nproxy-clients` namespace.
 
-        1. Create a configmap using the file k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml as a template. For each configmap, add the details of DC Cluster and API Key/Secret. This will be the config map the produce refers when it start:
+        1. Producer without proxy 
+           1. Create a configmap using the file `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml as a template. For each configmap, add the details of DC Cluster and API Key/Secret. This will be the config map the produce refers when it start:
 
-            ```bash
-            kubectl apply -f k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml
-            ```
+                ```bash
+                kubectl apply -f k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml
+                ```
 
-        2. Configure how the producer that will call CCloud Cluster directly:
+           2. Configure how the producer that will call CCloud Cluster directly:
 
-                   ```bash
-                   kubectl apply -f k8s-resources/no-proxy/java-cloud-producer-noproxy.yaml
-                   ```
+                      ```bash
+                      kubectl apply -f k8s-resources/no-proxy/java-cloud-producer-noproxy.yaml
+                      ```
 
-        3. Send Messages using the producer:
+           3. Send Messages using the producer:
 
-                   Get the EXTERNAL-IP where the producer expese its API:
+                      Get the EXTERNAL-IP where the producer expese its API:
 
-                   ```bash
-                   kubectl get svc -n noproxy-clients
-                   ```
+                      ```bash
+                      kubectl get svc -n noproxy-clients
+                      ```
 
-                   and send the message using this command:
+                      and send the message using this command:
 
-                   ```bash
-                   curl -X POST http://<EXTERNAL-IP>:8080/chuck-says
-                   ```
+                      ```bash
+                      curl -X POST http://<EXTERNAL-IP>:8080/chuck-says
+                      ```
+    
+           4. When disaster happens we will change the `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml` with the values of DC2 Cluster
 
-        4. When disaster happens we will change the `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml` with the values of DC2 Cluster
+           5. `Reloader` will trigger a `rolling update` on any deployment annotated to listen changes of this CM.
 
-        5. `Reloader` will trigger a `rolling update` on any deployment annotated to listen changes of this CM.
-
-        6. As failback procedure we just need to restore the connection data on `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml` to the DC 1 values and after a `rolling update` clients will be again connecting to the original cluster.
-
+           6. As failback procedure we just need to restore the connection data on `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml` to the DC 1 values and after a `rolling update` clients will be again connecting to the original cluster.
+           
+        2. Consumer without proxy
+           1. Create a config map using `k8s-resources/no-proxy/java-cloud-consumer-noproxy-configmap.yaml` as template as consumer it will contain the cluster information
+              ```bash
+              kubectl apply -f k8s-resources/no-proxy/java-cloud-consumer-noproxy.yaml
+              ```
+           2. Apply the consumer resources:
+              ```bash
+              kubectl apply -f k8s-resources/no-proxy/java-cloud-consumer.yaml
+              ```
+           3. `Consumer Client` will be created consumin from a pattern of topics that matches with the `active-active pattern`
+              
 ## Failover/failback automation:
 
 The change of the proper configuration (kafka-proxy or client config) on the subsequent config map is fully automated based `git hub actions`  and `Azure AKS` you can find the actions definition under `.github/workflows` folder.
@@ -170,6 +195,10 @@ Find the secrets needed on the image bellow.
 Just go to the `Actions` tab on your repo choose the action and branch from you want to perform.
 
 ![gh-actions-run.png](assets/gh-actions-run.png)
+
+For `proxy clients` a change on `proxy configuration` will be enough to change configuration on both `consumer` and `producer` and perform a rolling update.
+
+In case of `no proxy clients` the configuration is change directly on the client so you need to apply on both of them separately.
 
 ## Performance Test
 
