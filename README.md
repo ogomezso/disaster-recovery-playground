@@ -1,4 +1,4 @@
-# Disaster Recovery Playgroung
+# Disaster Recovery Playground
 
 ## Project Goal
 
@@ -12,13 +12,13 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
 
 ### Scenario Topology
 
-1. 2 Confluent Cloud Clusters following the active-active DR pattern:
+1. Two Confluent Cloud Clusters following the active-active DR pattern:
 
    ![Active-Active Patter](./assets/active-active%20pattern.svg)
 
 2. Kubernetes Cluster deployed (connectivity to CCloud cluster required)
 
-3. [Reloader](https://github.com/stakater/Reloader) pod deployed on your. For standard deployment you can execute:
+3. [Reloader](https://github.com/stakater/Reloader) pod deployed on your preferred namespace (default namespace can be a good option so any other one will have access to it). For standard deployment you can execute:
 
    ```bash
    kubectl apply -f https://raw.githubusercontent.com/stakater/Reloader/master/deployments/kubernetes/reloader.yaml
@@ -26,33 +26,33 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
 
 4. Create topics you want to use on both DC if auto.create.topics.enable is false
 
-   5. Cluster Linking: To setup the `active-active DR pattern` you will need:
+5. **Cluster Linking**: To setup the `active-active DR pattern` you will need:
 
-      1. Create a `.env` file under `ccloud-resources` folder it will contain:
+   1. Create a `.env` file under `ccloud-resources` folder it will contain:
 
-      ```properties
-      export ENV=  # CCLOUD Environment you're working on #
-      export TOPIC= # Default topic where clients will produce/consume #
-      export NP_TOPIC= # Topic where no proxy clients will produce/consume #
-      export CCLOUD_NORTH_CLUSTERID= # DC-1 Cluster Id #
-      export CCLOUD_NORTH_URL= # DC-1 Bootstrap server #
-      export CCLOUD_NORTH_APIKEY= # DC-1 App key #
-      export CCLOUD_NORTH_PASSWD= # DC-1 password #
-      export CCLOUD_WEST_CLUSTERID= # DC-2 Cluster Id #
-      export CCLOUD_WEST_URL= # DC-2 Bootstrap url #
-      export CCLOUD_WEST_APIKEY= # DC-2 Api Key #
-      export CCLOUD_WEST_PASSWD= # DC-2 Password #
-      ```
-      * The following scripts will use `.env` file to configure the resource creation
-      * All mirror topics will be prefixed with `<DC-Name>-`
-      2. Run  `ccloud-resources/cluster-linking/cluster-linking-north-west.sh` to create DC-1 to DC-2 `cluster link`
-      3. Run  `ccloud-resources/cluster-linking/create-mirror-topic-north-west.sh` to create the mirror topic on DC2 cluster for proxy based clients
-      4. Run `ccloud-resources/cluster-linking/create-mirror-noproxy-topic-north-west.sh` to create the mirror topic for on DC-2 cluster for non proxy based clients
-      5. Run `ccloud-resources/cluster-linking/cluster-linking-west-north.sh` to create DC-2 to DC-1 `cluster link`
-      6. Run `ccloud-resources/cluster-linking/create-mirror-topic-west-north.sh` to create mirror topic on DC1 for proxy based clients
-      7. Run `ccloud-resources/cluster-linking/create-mirror-noproxy-topic-west-north.sh` to create mirror topic on DC1 for non proxy based clients 
+   ```properties
+   export ENV=  # CCLOUD Environment you're working on #
+   export TOPIC= # Default topic where clients will produce/consume #
+   export NP_TOPIC= # Topic where no proxy clients will produce/consume #
+   export CCLOUD_NORTH_CLUSTERID= # DC-1 Cluster Id #
+   export CCLOUD_NORTH_URL= # DC-1 Bootstrap server #
+   export CCLOUD_NORTH_APIKEY= # DC-1 App key #
+   export CCLOUD_NORTH_PASSWD= # DC-1 password #
+   export CCLOUD_WEST_CLUSTERID= # DC-2 Cluster Id #
+   export CCLOUD_WEST_URL= # DC-2 Bootstrap url #
+   export CCLOUD_WEST_APIKEY= # DC-2 Api Key #
+   export CCLOUD_WEST_PASSWD= # DC-2 Password #
+   ```
+   * The following scripts will use `.env` file to configure the resource creation
+   * All mirror topics will be prefixed with `<DC-Name>-`
+   2. Run  `ccloud-resources/cluster-linking/cluster-linking-north-west.sh` to create DC-1 to DC-2 `cluster link`
+   3. Run  `ccloud-resources/cluster-linking/create-mirror-topic-north-west.sh` to create the mirror topic on DC2 cluster for proxy based clients
+   4. Run `ccloud-resources/cluster-linking/create-mirror-noproxy-topic-north-west.sh` to create the mirror topic for on DC-2 cluster for non proxy based clients
+   5. Run `ccloud-resources/cluster-linking/cluster-linking-west-north.sh` to create DC-2 to DC-1 `cluster link`
+   6. Run `ccloud-resources/cluster-linking/create-mirror-topic-west-north.sh` to create mirror topic on DC1 for proxy based clients
+   7. Run `ccloud-resources/cluster-linking/create-mirror-noproxy-topic-west-north.sh` to create mirror topic on DC1 for non proxy based clients 
 
-6. Java Clients (producer/consumer) images on a available registry (you can use the resource definition provided under k8's resources folder)
+6. **Java Clients (producer/consumer)** images on a available registry (you can use the resource definition provided under k8's resources folder)
 
    * ConfigMaps/Secrets need to be annotated to make `reloader` aware of the config changes:
 
@@ -127,7 +127,7 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
         * Resources are intended to be created on a `nproxy-clients` namespace.
 
         1. Producer without proxy 
-           1. Create a configmap using the file `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml as a template. For each configmap, add the details of DC Cluster and API Key/Secret. This will be the config map the produce refers when it start:
+           1. Create a configmap using the file `k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml` as a template. For each configmap, add the details of DC Cluster and API Key/Secret. This will be the config map the produce refers when it start:
 
                 ```bash
                 kubectl apply -f k8s-resources/no-proxy/java-cloud-producer-noproxy-configmap.yaml
@@ -168,7 +168,7 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
               ```bash
               kubectl apply -f k8s-resources/no-proxy/java-cloud-consumer.yaml
               ```
-           3. `Consumer Client` will be created consumin from a pattern of topics that matches with the `active-active pattern`
+           3. `Consumer Client` will be created configure to consume from a pattern of topics that matches with the `active-active pattern` naming defined. 
               
 ## Failover/failback automation:
 
