@@ -16,7 +16,7 @@ On this scenario we tried to solve this problem taking advantage of kubernetes f
 **Note**: On this example the producer and consumer are connected to one DC at a time but be aware that this scenario supports clients producing and consuming simultaneously on both DCs 
 
 On T0 we good our "origin cluster" up and running
- 
+
 ![T0](./assets/k8s-active-active-DR-T0.png)
 
 On T1 there is a lost of service on CCloud DC1
