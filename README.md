@@ -17,14 +17,14 @@ On this scenario we tried to solve this problem taking advantage of kubernetes f
 
 On T0 we good our "origin cluster" up and running
  
-![T0](./assets/K8s-Active-Active-DR-T0.png)
+![T0](./assets/k8s-active-active-DR-T0.png)
 
 On T1 there is a lost of service on CCloud DC1
 
-![T1](./assets/K8s-Active-Active-DR-T1.png)
+![T1](./assets/k8s-active-active-DR-T1.png)
 
 On T2 we change the ConfigMap containing the connection info and Realoader trigger a rolling update on all the clients that observes that CM
-![T2](./assets/K8s-Active-Active-DR-T2.png)
+![T2](./assets/k8s-active-active-DR-T2.png)
 
 
 ### Scenario Topology
