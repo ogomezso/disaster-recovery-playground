@@ -6,19 +6,47 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
 
 ## Active-Active Platform over Confluent Cloud with Clients hosted on K8s Cluster with automatic restart on config changes
 
-### Architectural Design
+## Motivation
 
-![Architectual Design](./assets/K8s%20Active%20-%20Active%20Disaster%20Recovery%20Strategy.svg)
+The main pain on all DR failback/failover strategy is the actual need to reconnection on all the clients to be able to reload metadata from the new cluster, how we can know which and where are this clients?, on distributed architecture patterns this is not always possible.
+
+On this scenario we tried to solve this problem taking advantage of kubernetes features regarging centraized  configuration.
+### Solution Design
+
+**Note**: On this example the producer and consumer are connected to one DC at a time but be aware that this scenario supports clients producing and consuming simultaneously on both DCs 
+
+On T0 we good our "origin cluster" up and running
+
+![T0](./assets/k8s-active-active-DR-T0.png)
+
+On T1 there is a lost of service on CCloud DC1
+
+![T1](./assets/k8s-active-active-DR-T1.png)
+
+On T2 we change the ConfigMap containing the connection info and Realoader trigger a rolling update on all the clients that observes that CM
+![T2](./assets/k8s-active-active-DR-T2.png)
+
 
 ### Scenario Topology
 
+![Active-Active Patter](./assets/active-active%20pattern.svg)
+
 1. Two Confluent Cloud Clusters following the active-active DR pattern:
+   Topic Topology Considerations:
+      a. Topics are created of both DC
+      b. Topics are replicated to the opposite DC, prefixed with their DC id
+   Client Considerations:
+      a. On this pattern clients can produce and consume from both DCS at the same time.
+      b. Producers only produce on the non-prefixed topics
+      c. Consumers will consume from both prefixed and non-prefixed topics allowing you to consume data produced on both DC
 
-   ![Active-Active Patter](./assets/active-active%20pattern.svg)
+2. Kubernetes Cluster deployed (connectivity to CCloud cluster required):
+   This K8s cluster will be used **just to deploy clients inside** 
 
-2. Kubernetes Cluster deployed (connectivity to CCloud cluster required)
+3. [Reloader](https://github.com/stakater/Reloader) pod deployed on your preferred namespace (default namespace can be a good option so any other one will have access to it). 
 
-3. [Reloader](https://github.com/stakater/Reloader) pod deployed on your preferred namespace (default namespace can be a good option so any other one will have access to it). For standard deployment you can execute:
+   Reloader is an open source tool that taking advantage of POD standard annotation give them the possibility to observe changes on one or many given config maps and perform a rolling update in case of it.
+   For standard deployment you can execute:
 
    ```bash
    kubectl apply -f https://raw.githubusercontent.com/stakater/Reloader/master/deployments/kubernetes/reloader.yaml
@@ -67,9 +95,14 @@ Reproduce different architectural patterns for Confluent Cluster Disaster Recove
          annotations:
            configmap.reloader.stakater.com/reload: "java-cloud-producer-config,kafka-proxy-config"
        ```
+
+   On this example we will be using two kind of clients:
+      - **Sidecar Proxy Based Clients**: Clients will be deployed with a [grepplabs/kafka-proxy](https://github.com/grepplabs/kafka-proxy) container as sidecar, that will act as a layer 4/7 kafka protocol aware proxy. The kafka proxy sidecar will manage all cluster connections so client configuration just need to setup the boker list as localhost on the port that proxy is opened. This way all the cluster related configuration (broker list, secrets, etc) is outside the client and managed by the proxy itself. It gives you the possibility to rely on platform teams to set up all the cluster information preventing the developer teams to have to take care of it.
+       - **Non-Proxy Based Clients**: Plain K8s Based Kafka Client, on this case the configuration management is all inside the client config maps.
+
     1. **Java Client with Proxy**
         * Resources are intended to be created on a `clients` namespace.
-        * Clients will be deployed with a [grepplabs/kafka-proxy](https://github.com/grepplabs/kafka-proxy) container as sidecar, that will act as a layer 7 kafka protocol aware proxy.
+       
 
         1. Create 2 configmap using the file `k8s-resources/proxy/kafka-proxy-configmap.yaml` as a template. For each configmap, add the details of DC Cluster and API Key/Secret. This will be the config map the produce refers when it start:
 
