@@ -11,7 +11,7 @@ data:
      ssl.endpoint.identification.algorithm=https
      security.protocol=SASL_SSL
      sasl.mechanism=PLAIN
-     sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${CCLOUD_APIKEY}' password=$'{CCLOUD_PASSWD}';
+     sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${CCLOUD_APIKEY}' password='${CCLOUD_PASSWD}';
      client.id=chuck-java-noproxy-producer
      key.serializer=org.apache.kafka.common.serialization.StringSerializer
      value.serializer=org.apache.kafka.common.serialization.StringSerializer
