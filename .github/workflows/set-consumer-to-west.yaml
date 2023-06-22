@@ -1,4 +1,4 @@
-name: Point producer to West Cluster
+name: Point consumer to West Cluster
 on:
   workflow_dispatch:
 
