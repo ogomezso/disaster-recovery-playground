@@ -1,4 +1,4 @@
-name: Point consumerer to North Cluster
+name: Point consumer to North Cluster
 on:
   workflow_dispatch:
 
